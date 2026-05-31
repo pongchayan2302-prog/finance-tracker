@@ -1,3 +1,4 @@
+const { analyzeSlip } = require('./gemini');
 const line = require('@line/bot-sdk');
 const { analyzeSlip } = require('./gemini');
 const { createClient } = require('@supabase/supabase-js');
