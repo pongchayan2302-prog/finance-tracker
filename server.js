@@ -13,13 +13,25 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
-app.use('/webhook', line.middleware(lineConfig));
-app.use(express.json());
+app.use(express.json({
+  verify: (req, res, buf) => { req.rawBody = buf; }
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/webhook', async (req, res) => {
   try {
-    await Promise.all(req.body.events.map(handleEvent));
+    const crypto = require('crypto');
+    const signature = req.headers['x-line-signature'];
+    const body = req.rawBody;
+    const hash = crypto
+      .createHmac('sha256', process.env.LINE_CHANNEL_SECRET)
+      .update(body)
+      .digest('base64');
+    if (hash !== signature) {
+      return res.status(400).json({ error: 'Invalid signature' });
+    }
+    const events = req.body.events || [];
+    await Promise.all(events.map(handleEvent));
     res.json({ status: 'ok' });
   } catch (err) {
     console.error('Webhook error:', err);
