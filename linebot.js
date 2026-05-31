@@ -43,12 +43,15 @@ async function handleImageMessage(userId, replyToken, messageId) {
     const base64 = buffer.toString('base64');
 
     const result = await analyzeSlip(base64, 'image/jpeg');
+    console.log('Gemini result:', JSON.stringify(result));
 
-    if (!result || !result.amount) {
-      await client.pushMessage(userId, {
-        type: 'text',
-        text: 'อ่านสลิปไม่ได้ครับ ลองส่งรูปใหม่'
-      });
+    if (!result) {
+      await client.pushMessage(userId, { type: 'text', text: 'Gemini ไม่ตอบกลับครับ' });
+      return;
+    }
+
+    if (!result.amount) {
+      await client.pushMessage(userId, { type: 'text', text: 'Debug: ' + JSON.stringify(result) });
       return;
     }
 
