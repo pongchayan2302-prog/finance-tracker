@@ -48,12 +48,21 @@ async function analyzeSlip(imageBase64, mimeType = 'image/jpeg') {
   });
 
   const data = await res.json();
+  console.log('Gemini raw response:', JSON.stringify(data).slice(0, 500));
+  
+  if (data.error) {
+    console.log('Gemini error:', data.error.message);
+    return null;
+  }
+
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  console.log('Gemini text:', text.slice(0, 200));
   const clean = text.replace(/```json|```/g, '').trim();
 
   try {
     return JSON.parse(clean);
   } catch {
+    console.log('JSON parse failed:', clean.slice(0, 100));
     return null;
   }
 }
