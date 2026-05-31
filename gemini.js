@@ -1,3 +1,4 @@
+console.log('gemini.js loaded v2');
 async function analyzeSlip(imageBase64, mimeType = 'image/jpeg') {
   const apiKey = process.env.GEMINI_API_KEY;
   
