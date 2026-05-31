@@ -1,29 +1,13 @@
-console.log('gemini.js loaded v2');
-
-async function analyzeSlip(imageBase64, mimeType = 'image/jpeg') {
-  const apiKey = process.env.GEMINI_API_KEY;
-  
+async function analyzeSlip(imageBase64, mimeType) {
+  if (!mimeType) mimeType = 'image/jpeg';
+  var apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    console.log('ERROR: GEMINI_API_KEY not set');
+    console.log('ERROR: no GEMINI_API_KEY');
     return null;
   }
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-  const prompt = `คุณคือผู้ช่วยอ่านสลิปธนาคารไทย วิเคราะห์รูปสลิปนี้และตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นนอกจาก JSON
-
-ตอบในรูปแบบนี้เท่านั้น:
-{"bank":"ktb","type":"expense","amount":183,"date":"2026-05-29","description":"FUFU MALATANG","category_suggest":"ของกิน"}
-
-กฎ:
-- bank: "ktb" (กรุงไทย สีน้ำเงิน), "gsb" (ออมสิน สีเขียว), "unknown"
-- type: "expense" (จ่ายออก), "income" (รับเงิน)
-- amount: ตัวเลขจำนวนเงินหลัก ไม่รวมค่าธรรมเนียม
-- date: YYYY-MM-DD
-- description: ชื่อร้านหรือรายการ
-- category_suggest: ของกิน/เดินทาง/ช้อปปิ้ง/ลงทุน/ธุรกิจ/รายได้/อื่นๆ`;
-
-  const body = {
+  var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
+  var prompt = 'Read this Thai bank slip and reply with ONLY a JSON object, no other text.\nFormat: {"bank":"ktb","type":"expense","amount":183,"date":"2026-05-29","description":"shop name","category_suggest":"food"}\nRules:\n- bank: ktb (Krungthai blue) or gsb (GSB green) or unknown\n- type: expense (paying out) or income (receiving money)\n- amount: main amount number only\n- date: YYYY-MM-DD format\n- category_suggest: one of: food, travel, shopping, investment, business, income, other';
+  var body = {
     contents: [{
       parts: [
         { text: prompt },
@@ -32,31 +16,29 @@ async function analyzeSlip(imageBase64, mimeType = 'image/jpeg') {
     }],
     generationConfig: { temperature: 0.1, maxOutputTokens: 200 }
   };
-
   try {
-    const res = await fetch(url, {
+    var res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-
-    const data = await res.json();
+    var data = await res.json();
     console.log('Gemini status:', res.status);
-    
     if (data.error) {
-      console.log('Gemini API error:', data.error.message);
+      console.log('Gemini error:', data.error.message);
       return null;
     }
-
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    console.log('Gemini text:', text.slice(0, 300));
-    
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-    console.log('Parsed OK:', JSON.stringify(parsed));
+    var text = '';
+    if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+      text = data.candidates[0].content.parts[0].text || '';
+    }
+    console.log('Gemini text:', text.slice(0, 200));
+    var clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    var parsed = JSON.parse(clean);
+    console.log('Parsed:', JSON.stringify(parsed));
     return parsed;
   } catch (err) {
-    console.log('Gemini fetch error:', err.message);
+    console.log('Gemini error:', err.message);
     return null;
   }
 }
