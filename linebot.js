@@ -44,10 +44,10 @@ async function handleImageMessage(userId, replyToken, messageId) {
 
     const result = await analyzeSlip(base64, 'image/jpeg');
 
-    if (!result || result.confidence === 'low') {
+    if (!result || !result.amount) {
       await client.pushMessage(userId, {
         type: 'text',
-        text: 'อ่านสลิปไม่ได้ชัดครับ ลองส่งรูปใหม่ที่ชัดกว่านี้'
+        text: 'อ่านสลิปไม่ได้ครับ ลองส่งรูปใหม่'
       });
       return;
     }
