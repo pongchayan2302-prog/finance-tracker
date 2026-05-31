@@ -196,4 +196,3 @@ async function sendMonthlySummary(userId, replyToken) {
 }
 
 module.exports = { handleEvent, lineConfig };
-
